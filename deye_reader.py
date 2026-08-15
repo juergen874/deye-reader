@@ -265,88 +265,184 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             --border-color: rgba(255, 255, 255, 0.08);
             --danger: #ef4444;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
+            background-color: #0b0f19;
             background-color: var(--bg-color);
+            color: #f8fafc;
             color: var(--text-main);
-            padding: 14px;
+            padding: 16px;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 1200px; margin: 0 auto; }
         header {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
             flex-wrap: wrap;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            -ms-flex-pack: justify;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 12px;
             margin-bottom: 18px;
-            gap: 10px;
         }
         .header-title h1 {
-            font-size: 1.35rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #fbbf24;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         .header-title .sub {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
+            color: #94a3b8;
             color: var(--text-sub);
-            margin-top: 2px;
+            margin-top: 3px;
         }
         .header-status {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
             align-items: center;
-            gap: 8px;
+            margin-top: 6px;
         }
         .badge {
+            display: -webkit-inline-box;
+            display: -webkit-inline-flex;
+            display: -ms-inline-flexbox;
             display: inline-flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
             align-items: center;
-            gap: 6px;
             background: #1e293b;
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 9999px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 500;
+            color: #94a3b8;
             color: var(--text-sub);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
         }
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
             background-color: #10b981;
             box-shadow: 0 0 8px #10b981;
             display: inline-block;
+            margin-right: 8px;
         }
         .dot.pulse {
+            -webkit-animation: pulse-dot 1.8s infinite ease-in-out;
             animation: pulse-dot 1.8s infinite ease-in-out;
         }
         .dot.err {
-            background-color: var(--danger);
-            box-shadow: 0 0 8px var(--danger);
+            background-color: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+        }
+        @-webkit-keyframes pulse-dot {
+            0%, 100% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
+            50% { opacity: 0.4; -webkit-transform: scale(0.85); transform: scale(0.85); }
         }
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(0.85); }
         }
+        .flow-summary {
+            background: #151e2e;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-justify-content: space-around;
+            -ms-flex-pack: distribute;
+            justify-content: space-around;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            text-align: center;
+        }
+        .flow-item {
+            -webkit-box-flex: 1;
+            -webkit-flex: 1 1 120px;
+            -ms-flex: 1 1 120px;
+            flex: 1 1 120px;
+            margin: 4px;
+        }
+        .flow-label {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .flow-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 3px;
+        }
         .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            margin: -8px;
         }
         .card {
+            -webkit-box-flex: 1;
+            -webkit-flex: 1 1 calc(50% - 16px);
+            -ms-flex: 1 1 calc(50% - 16px);
+            flex: 1 1 calc(50% - 16px);
+            min-width: 280px;
+            margin: 8px;
+            background: #151e2e;
             background: var(--card-bg);
             border-radius: 14px;
             padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
             box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.4);
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            -ms-flex-direction: column;
             flex-direction: column;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            -ms-flex-pack: justify;
             justify-content: space-between;
             position: relative;
             overflow: hidden;
@@ -359,16 +455,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             right: 0;
             height: 3px;
         }
-        .card-solar::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .card-bat::before { background: linear-gradient(90deg, #10b981, #34d399); }
-        .card-grid::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-        .card-load::before { background: linear-gradient(90deg, #ec4899, #f472b6); }
+        .card-solar::before { background: #f59e0b; }
+        .card-bat::before { background: #10b981; }
+        .card-grid::before { background: #3b82f6; }
+        .card-load::before { background: #ec4899; }
 
         .card-header {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 700;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            -ms-flex-pack: justify;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
             align-items: center;
             margin-bottom: 8px;
         }
@@ -379,69 +484,58 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             letter-spacing: -0.5px;
             line-height: 1.1;
         }
-        .solar-color { color: var(--accent-solar); }
-        .bat-color { color: var(--accent-bat); }
-        .grid-color { color: var(--accent-grid); }
-        .load-color { color: var(--accent-load); }
+        .solar-color { color: #f59e0b; color: var(--accent-solar); }
+        .bat-color { color: #10b981; color: var(--accent-bat); }
+        .grid-color { color: #3b82f6; color: var(--accent-grid); }
+        .load-color { color: #ec4899; color: var(--accent-load); }
 
         .sub-metrics {
             margin-top: auto;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
+            background: #1c273c;
             background: var(--card-inner);
             padding: 10px 12px;
             border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
         }
         .row {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            -ms-flex-pack: justify;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
             align-items: center;
             padding: 5px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         .row:last-child { border-bottom: none; }
-        .row span:first-child { color: var(--text-sub); }
-        .val { color: var(--text-main); font-weight: 600; }
+        .row span:first-child { color: #94a3b8; color: var(--text-sub); }
+        .val { color: #f8fafc; color: var(--text-main); font-weight: 600; }
         .val-badge {
-            font-size: 0.75rem;
-            padding: 2px 8px;
+            font-size: 0.78rem;
+            padding: 3px 8px;
             border-radius: 6px;
             background: rgba(255, 255, 255, 0.1);
         }
-
-        /* Power flow banner */
-        .flow-summary {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            align-items: center;
-            gap: 12px;
-            text-align: center;
-        }
-        .flow-item {
-            flex: 1 1 120px;
-        }
-        .flow-label { font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
-        .flow-val { font-size: 1.15rem; font-weight: 700; margin-top: 2px; }
-
         footer {
             margin-top: 20px;
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
             color: var(--text-sub);
             padding-top: 10px;
         }
-
-        @media (max-width: 480px) {
-            body { padding: 8px; }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card { -webkit-flex-basis: 100%; -ms-flex-basis: 100%; flex-basis: 100%; margin: 6px 0; }
             .metric-big { font-size: 1.85rem; }
-            .grid { grid-template-columns: 1fr; gap: 12px; }
-            .card { padding: 14px; }
         }
     </style>
 </head>
@@ -464,19 +558,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="flow-summary">
             <div class="flow-item">
                 <div class="flow-label">☀️ Erzeugung</div>
-                <div class="flow-val solar-color" id="sum-solar">0 W</div>
+                <div class="flow-val solar-color" id="sum-solar">-- W</div>
             </div>
             <div class="flow-item">
                 <div class="flow-label">🔋 Speicher</div>
-                <div class="flow-val bat-color" id="sum-bat">0 %</div>
+                <div class="flow-val bat-color" id="sum-bat">-- %</div>
             </div>
             <div class="flow-item">
                 <div class="flow-label">🔌 Netz</div>
-                <div class="flow-val grid-color" id="sum-grid">0 W</div>
+                <div class="flow-val grid-color" id="sum-grid">-- W</div>
             </div>
             <div class="flow-item">
                 <div class="flow-label">🏠 Verbrauch</div>
-                <div class="flow-val load-color" id="sum-load">0 W</div>
+                <div class="flow-val load-color" id="sum-load">-- W</div>
             </div>
         </div>
 
@@ -486,14 +580,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div>
                     <div class="card-header solar-color">
                         <span>☀️ Solar PV</span>
-                        <span class="val-badge" id="pv-today-badge">Heute: 0 kWh</span>
+                        <span class="val-badge" id="pv-today-badge">Heute: -- kWh</span>
                     </div>
-                    <div class="metric-big solar-color" id="pv-total">0 W</div>
+                    <div class="metric-big solar-color" id="pv-total">-- W</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>PV String 1:</span><span class="val" id="pv1">0 W</span></div>
-                    <div class="row"><span>PV String 2:</span><span class="val" id="pv2">0 W</span></div>
-                    <div class="row"><span>Tagesertrag:</span><span class="val" id="pv-today">0 kWh</span></div>
+                    <div class="row"><span>PV String 1:</span><span class="val" id="pv1">--</span></div>
+                    <div class="row"><span>PV String 2:</span><span class="val" id="pv2">--</span></div>
+                    <div class="row"><span>Tagesertrag:</span><span class="val" id="pv-today">-- kWh</span></div>
                 </div>
             </div>
 
@@ -502,15 +596,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div>
                     <div class="card-header bat-color">
                         <span>🔋 Batterie</span>
-                        <span class="val-badge" id="bat-status-badge">Standby</span>
+                        <span class="val-badge" id="bat-status-badge">Lade...</span>
                     </div>
-                    <div class="metric-big bat-color" id="bat-soc">0 %</div>
+                    <div class="metric-big bat-color" id="bat-soc">-- %</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Leistung:</span><span class="val" id="bat-power">0 W</span></div>
-                    <div class="row"><span>Spannung / Strom:</span><span class="val" id="bat-vi">0.0 V / 0.0 A</span></div>
-                    <div class="row"><span>Batterietemperatur:</span><span class="val" id="bat-temp">0 °C</span></div>
-                    <div class="row"><span>Ladung / Entladung:</span><span class="val" id="bat-today">0 / 0 kWh</span></div>
+                    <div class="row"><span>Leistung:</span><span class="val" id="bat-power">-- W</span></div>
+                    <div class="row"><span>Spannung / Strom:</span><span class="val" id="bat-vi">-- V / -- A</span></div>
+                    <div class="row"><span>Batterietemperatur:</span><span class="val" id="bat-temp">-- °C</span></div>
+                    <div class="row"><span>Ladung / Entladung:</span><span class="val" id="bat-today">-- / -- kWh</span></div>
                 </div>
             </div>
 
@@ -519,15 +613,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div>
                     <div class="card-header grid-color">
                         <span>🔌 Netzanschluss</span>
-                        <span class="val-badge" id="grid-freq">50.0 Hz</span>
+                        <span class="val-badge" id="grid-freq">-- Hz</span>
                     </div>
-                    <div class="metric-big grid-color" id="grid-total">0 W</div>
+                    <div class="metric-big grid-color" id="grid-total">-- W</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Phase L1:</span><span class="val" id="grid-l1">0 V / 0 W</span></div>
-                    <div class="row"><span>Phase L2:</span><span class="val" id="grid-l2">0 V / 0 W</span></div>
-                    <div class="row"><span>Phase L3:</span><span class="val" id="grid-l3">0 V / 0 W</span></div>
-                    <div class="row"><span>Kauf / Verkauf Heute:</span><span class="val" id="grid-today">0 / 0 kWh</span></div>
+                    <div class="row"><span>Phase L1:</span><span class="val" id="grid-l1">-- V / -- W</span></div>
+                    <div class="row"><span>Phase L2:</span><span class="val" id="grid-l2">-- V / -- W</span></div>
+                    <div class="row"><span>Phase L3:</span><span class="val" id="grid-l3">-- V / -- W</span></div>
+                    <div class="row"><span>Kauf / Verkauf Heute:</span><span class="val" id="grid-today">--</span></div>
                 </div>
             </div>
 
@@ -536,14 +630,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div>
                     <div class="card-header load-color">
                         <span>🏠 Hausverbrauch</span>
-                        <span class="val-badge" id="load-today-badge">Heute: 0 kWh</span>
+                        <span class="val-badge" id="load-today-badge">Heute: -- kWh</span>
                     </div>
-                    <div class="metric-big load-color" id="load-total">0 W</div>
+                    <div class="metric-big load-color" id="load-total">-- W</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Phasen L1 / L2 / L3:</span><span class="val" id="load-phases">0 / 0 / 0 W</span></div>
-                    <div class="row"><span>Tagesverbrauch:</span><span class="val" id="load-today">0 kWh</span></div>
-                    <div class="row"><span>Inverter Temp (DC/AC):</span><span class="val" id="inv-temps">0 / 0 °C</span></div>
+                    <div class="row"><span>Phasen L1 / L2 / L3:</span><span class="val" id="load-phases">-- / -- / -- W</span></div>
+                    <div class="row"><span>Tagesverbrauch:</span><span class="val" id="load-today">-- kWh</span></div>
+                    <div class="row"><span>Inverter Temp (DC/AC):</span><span class="val" id="inv-temps">-- / -- °C</span></div>
                 </div>
             </div>
         </div>
@@ -556,93 +650,175 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <script>
         function fmtW(w) {
             if (w === undefined || w === null || isNaN(w)) return "0 W";
-            const abs = Math.abs(w);
+            var num = Number(w);
+            var abs = Math.abs(num);
             if (abs >= 1000) {
-                return (w / 1000).toFixed(2) + " kW";
+                return (num / 1000).toFixed(2) + " kW";
             }
-            return Math.round(w) + " W";
+            return Math.round(num) + " W";
         }
 
-        async function fetchMetrics() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-                const res = await fetch('/api/data', { signal: controller.signal, cache: 'no-store' });
-                clearTimeout(timeoutId);
+        function setElText(id, text) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.innerText = text;
+            }
+        }
 
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const d = await res.json();
-                
-                if (!d || Object.keys(d).length === 0) {
-                    document.getElementById('last-update').innerText = 'Warte auf Wechselrichter...';
-                    return;
-                }
+        function updateUI(d) {
+            if (!d || typeof d !== 'object' || Object.keys(d).length === 0) {
+                setElText('last-update', 'Warte auf Wechselrichter...');
+                return;
+            }
 
-                // Status
-                const dot = document.getElementById('status-dot');
+            // Status indicator
+            var dot = document.getElementById('status-dot');
+            if (dot) {
                 dot.className = 'dot pulse';
-                const st = d.status_text || 'Normal';
-                const timeStr = d.timestamp ? d.timestamp.split(' ')[1] : '';
-                document.getElementById('last-update').innerText = timeStr + ' (' + st + ')';
+            }
+            var st = d.status_text || 'Normal';
+            var timeStr = '';
+            if (d.timestamp) {
+                var parts = d.timestamp.split(' ');
+                timeStr = parts.length > 1 ? parts[1] : d.timestamp;
+            }
+            setElText('last-update', (timeStr ? timeStr + ' ' : '') + '(' + st + ')');
 
-                // Flow summary
-                const pvTot = d.pv_power_total_w || 0;
-                const batPow = d.battery_power_w || 0;
-                const gridPow = d.grid_power_total_w || 0;
-                const loadTot = d.load_power_total_w || 0;
+            // Flow summary
+            var pvTot = (typeof d.pv_power_total_w === 'number') ? d.pv_power_total_w : 0;
+            var batPow = (typeof d.battery_power_w === 'number') ? d.battery_power_w : 0;
+            var gridPow = (typeof d.grid_power_total_w === 'number') ? d.grid_power_total_w : 0;
+            var loadTot = (typeof d.load_power_total_w === 'number') ? d.load_power_total_w : 0;
 
-                document.getElementById('sum-solar').innerText = fmtW(pvTot);
-                document.getElementById('sum-bat').innerText = (d.battery_soc_percent || 0) + ' %';
-                document.getElementById('sum-grid').innerText = (gridPow >= 0 ? '+' : '') + fmtW(gridPow);
-                document.getElementById('sum-load').innerText = fmtW(loadTot);
+            setElText('sum-solar', fmtW(pvTot));
+            setElText('sum-bat', (d.battery_soc_percent !== undefined ? d.battery_soc_percent : 0) + ' %');
+            setElText('sum-grid', (gridPow >= 0 ? '+' : '') + fmtW(gridPow));
+            setElText('sum-load', fmtW(loadTot));
 
-                // PV Card
-                document.getElementById('pv-total').innerText = fmtW(pvTot);
-                document.getElementById('pv1').innerText = (d.pv1_power_w || 0) + ' W (' + (d.pv1_voltage_v || 0) + ' V, ' + (d.pv1_current_a || 0) + ' A)';
-                document.getElementById('pv2').innerText = (d.pv2_power_w || 0) + ' W (' + (d.pv2_voltage_v || 0) + ' V, ' + (d.pv2_current_a || 0) + ' A)';
-                document.getElementById('pv-today').innerText = (d.energy_pv_today_kwh || 0) + ' kWh';
-                document.getElementById('pv-today-badge').innerText = 'Heute: ' + (d.energy_pv_today_kwh || 0) + ' kWh';
+            // PV Card
+            setElText('pv-total', fmtW(pvTot));
+            var pv1V = (typeof d.pv1_voltage_v === 'number') ? d.pv1_voltage_v.toFixed(1) : '0.0';
+            var pv1I = (typeof d.pv1_current_a === 'number') ? d.pv1_current_a.toFixed(1) : '0.0';
+            var pv1W = (typeof d.pv1_power_w === 'number') ? d.pv1_power_w.toFixed(0) : '0';
+            setElText('pv1', pv1W + ' W (' + pv1V + ' V, ' + pv1I + ' A)');
 
-                // Battery Card
-                const soc = d.battery_soc_percent || 0;
-                document.getElementById('bat-soc').innerText = soc + ' %';
-                let batStatusText = 'Standby';
-                if (batPow > 20) batStatusText = 'Laden (' + fmtW(batPow) + ')';
-                else if (batPow < -20) batStatusText = 'Entladen (' + fmtW(Math.abs(batPow)) + ')';
-                document.getElementById('bat-status-badge').innerText = batStatusText;
-                document.getElementById('bat-power').innerText = (batPow >= 0 ? '+' : '') + fmtW(batPow);
-                document.getElementById('bat-vi').innerText = (d.battery_voltage_v || 0).toFixed(1) + ' V / ' + (d.battery_current_a || 0).toFixed(1) + ' A';
-                document.getElementById('bat-temp').innerText = (d.temp_battery_celsius || 0) + ' °C';
-                document.getElementById('bat-today').innerText = (d.energy_bat_charge_today_kwh || 0) + ' / ' + (d.energy_bat_dischg_today_kwh || 0) + ' kWh';
+            var pv2V = (typeof d.pv2_voltage_v === 'number') ? d.pv2_voltage_v.toFixed(1) : '0.0';
+            var pv2I = (typeof d.pv2_current_a === 'number') ? d.pv2_current_a.toFixed(1) : '0.0';
+            var pv2W = (typeof d.pv2_power_w === 'number') ? d.pv2_power_w.toFixed(0) : '0';
+            setElText('pv2', pv2W + ' W (' + pv2V + ' V, ' + pv2I + ' A)');
 
-                // Grid Card
-                let gridLabel = gridPow >= 0 ? 'Bezug: ' + fmtW(gridPow) : 'Einspeisung: ' + fmtW(Math.abs(gridPow));
-                document.getElementById('grid-total').innerText = (gridPow >= 0 ? '+' : '') + fmtW(gridPow);
-                document.getElementById('grid-freq').innerText = (d.grid_frequency_hz || 50.0) + ' Hz';
-                document.getElementById('grid-l1').innerText = (d.grid_voltage_l1_v || 0) + ' V / ' + (d.grid_power_l1_w || 0) + ' W';
-                document.getElementById('grid-l2').innerText = (d.grid_voltage_l2_v || 0) + ' V / ' + (d.grid_power_l2_w || 0) + ' W';
-                document.getElementById('grid-l3').innerText = (d.grid_voltage_l3_v || 0) + ' V / ' + (d.grid_power_l3_w || 0) + ' W';
-                document.getElementById('grid-today').innerText = 'K: ' + (d.energy_grid_buy_today_kwh || 0) + ' / V: ' + (d.energy_grid_sell_today_kwh || 0) + ' kWh';
+            var pvToday = (typeof d.energy_pv_today_kwh === 'number') ? d.energy_pv_today_kwh.toFixed(1) : '0.0';
+            setElText('pv-today', pvToday + ' kWh');
+            setElText('pv-today-badge', 'Heute: ' + pvToday + ' kWh');
 
-                // Load Card
-                document.getElementById('load-total').innerText = fmtW(loadTot);
-                document.getElementById('load-phases').innerText = (d.load_power_l1_w || 0) + ' / ' + (d.load_power_l2_w || 0) + ' / ' + (d.load_power_l3_w || 0) + ' W';
-                document.getElementById('load-today').innerText = (d.energy_load_today_kwh || 0) + ' kWh';
-                document.getElementById('load-today-badge').innerText = 'Heute: ' + (d.energy_load_today_kwh || 0) + ' kWh';
-                document.getElementById('inv-temps').innerText = (d.temp_dc_celsius || 0) + ' °C / ' + (d.temp_ac_celsius || 0) + ' °C';
+            // Battery Card
+            var soc = (d.battery_soc_percent !== undefined) ? d.battery_soc_percent : 0;
+            setElText('bat-soc', soc + ' %');
+            var batStatusText = 'Standby';
+            if (batPow > 20) {
+                batStatusText = 'Laden (' + fmtW(batPow) + ')';
+            } else if (batPow < -20) {
+                batStatusText = 'Entladen (' + fmtW(Math.abs(batPow)) + ')';
+            }
+            setElText('bat-status-badge', batStatusText);
+            setElText('bat-power', (batPow >= 0 ? '+' : '') + fmtW(batPow));
+            var batV = (typeof d.battery_voltage_v === 'number') ? d.battery_voltage_v.toFixed(1) : '0.0';
+            var batI = (typeof d.battery_current_a === 'number') ? d.battery_current_a.toFixed(1) : '0.0';
+            setElText('bat-vi', batV + ' V / ' + batI + ' A');
+            setElText('bat-temp', (d.temp_battery_celsius !== undefined ? d.temp_battery_celsius : 0) + ' \u00B0C');
+            var batChgToday = (typeof d.energy_bat_charge_today_kwh === 'number') ? d.energy_bat_charge_today_kwh.toFixed(1) : '0.0';
+            var batDisToday = (typeof d.energy_bat_dischg_today_kwh === 'number') ? d.energy_bat_dischg_today_kwh.toFixed(1) : '0.0';
+            setElText('bat-today', batChgToday + ' / ' + batDisToday + ' kWh');
 
-                // Footer
-                if (d.logger_serial) {
-                    document.getElementById('footer-details').innerText = 'Deye SUN-12K &bull; Logger SN: ' + d.logger_serial + ' &bull; ' + (d.timestamp || '');
-                }
-            } catch(e) {
-                const dot = document.getElementById('status-dot');
-                if (dot) dot.className = 'dot err';
-                const lu = document.getElementById('last-update');
-                if (lu) lu.innerText = 'Verbindung unterbrochen...';
+            // Grid Card
+            setElText('grid-total', (gridPow >= 0 ? '+' : '') + fmtW(gridPow));
+            setElText('grid-freq', (typeof d.grid_frequency_hz === 'number' ? d.grid_frequency_hz.toFixed(2) : '50.00') + ' Hz');
+            var gL1V = (typeof d.grid_voltage_l1_v === 'number') ? d.grid_voltage_l1_v.toFixed(1) : '0.0';
+            var gL1W = (typeof d.grid_power_l1_w === 'number') ? d.grid_power_l1_w : 0;
+            setElText('grid-l1', gL1V + ' V / ' + gL1W + ' W');
+
+            var gL2V = (typeof d.grid_voltage_l2_v === 'number') ? d.grid_voltage_l2_v.toFixed(1) : '0.0';
+            var gL2W = (typeof d.grid_power_l2_w === 'number') ? d.grid_power_l2_w : 0;
+            setElText('grid-l2', gL2V + ' V / ' + gL2W + ' W');
+
+            var gL3V = (typeof d.grid_voltage_l3_v === 'number') ? d.grid_voltage_l3_v.toFixed(1) : '0.0';
+            var gL3W = (typeof d.grid_power_l3_w === 'number') ? d.grid_power_l3_w : 0;
+            setElText('grid-l3', gL3V + ' V / ' + gL3W + ' W');
+
+            var buyToday = (typeof d.energy_grid_buy_today_kwh === 'number') ? d.energy_grid_buy_today_kwh.toFixed(1) : '0.0';
+            var sellToday = (typeof d.energy_grid_sell_today_kwh === 'number') ? d.energy_grid_sell_today_kwh.toFixed(1) : '0.0';
+            setElText('grid-today', 'Kauf: ' + buyToday + ' / Verk: ' + sellToday + ' kWh');
+
+            // Load Card
+            setElText('load-total', fmtW(loadTot));
+            var lL1 = (typeof d.load_power_l1_w === 'number') ? d.load_power_l1_w : 0;
+            var lL2 = (typeof d.load_power_l2_w === 'number') ? d.load_power_l2_w : 0;
+            var lL3 = (typeof d.load_power_l3_w === 'number') ? d.load_power_l3_w : 0;
+            setElText('load-phases', lL1 + ' / ' + lL2 + ' / ' + lL3 + ' W');
+            var loadToday = (typeof d.energy_load_today_kwh === 'number') ? d.energy_load_today_kwh.toFixed(1) : '0.0';
+            setElText('load-today', loadToday + ' kWh');
+            setElText('load-today-badge', 'Heute: ' + loadToday + ' kWh');
+            var dcTemp = (typeof d.temp_dc_celsius === 'number') ? d.temp_dc_celsius.toFixed(1) : '0';
+            var acTemp = (typeof d.temp_ac_celsius === 'number') ? d.temp_ac_celsius.toFixed(1) : '0';
+            setElText('inv-temps', dcTemp + ' \u00B0C / ' + acTemp + ' \u00B0C');
+
+            // Footer
+            if (d.logger_serial) {
+                setElText('footer-details', 'Deye SUN-12K \u2022 Logger SN: ' + d.logger_serial + ' \u2022 ' + (d.timestamp || ''));
             }
         }
 
+        function fetchMetrics() {
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/data?_t=' + (new Date().getTime()), true);
+                xhr.timeout = 4000;
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                var d = JSON.parse(xhr.responseText);
+                                updateUI(d);
+                            } catch (e) {
+                                var lu = document.getElementById('last-update');
+                                if (lu) lu.innerText = 'Datenfehler';
+                            }
+                        } else if (xhr.status !== 0) {
+                            var dot = document.getElementById('status-dot');
+                            if (dot) dot.className = 'dot err';
+                            var lu = document.getElementById('last-update');
+                            if (lu) lu.innerText = 'HTTP Fehler ' + xhr.status;
+                        }
+                    }
+                };
+                xhr.onerror = function() {
+                    var dot = document.getElementById('status-dot');
+                    if (dot) dot.className = 'dot err';
+                    var lu = document.getElementById('last-update');
+                    if (lu) lu.innerText = 'Verbindung unterbrochen';
+                };
+                xhr.ontimeout = function() {
+                    var dot = document.getElementById('status-dot');
+                    if (dot) dot.className = 'dot err';
+                    var lu = document.getElementById('last-update');
+                    if (lu) lu.innerText = 'Zeit\u00FCberschreitung';
+                };
+                xhr.send();
+            } catch(e) {
+                var dot = document.getElementById('status-dot');
+                if (dot) dot.className = 'dot err';
+                var lu = document.getElementById('last-update');
+                if (lu) lu.innerText = 'Fehler';
+            }
+        }
+
+        // Initialize immediately with server-injected data if available
+        var initialData = /*__INITIAL_DATA__*/ null;
+        if (initialData && typeof initialData === 'object' && initialData.status_code !== undefined) {
+            updateUI(initialData);
+        }
+
+        // Fetch immediately and poll every 2.5 seconds
         fetchMetrics();
         setInterval(fetchMetrics, 2500);
     </script>
@@ -669,7 +845,9 @@ class WebDashboardServer(BaseHTTPRequestHandler):
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(payload)))
                 self.send_header("Access-Control-Allow-Origin", "*")
-                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
                 self.send_header("Connection", "close")
                 self.end_headers()
                 if include_body:
@@ -680,11 +858,16 @@ class WebDashboardServer(BaseHTTPRequestHandler):
                 self.send_header("Connection", "close")
                 self.end_headers()
             else:
-                payload = HTML_TEMPLATE.encode("utf-8")
+                with telemetry_lock:
+                    init_data_str = json.dumps(latest_telemetry) if (latest_telemetry and "status_code" in latest_telemetry) else "null"
+                rendered_html = HTML_TEMPLATE.replace("/*__INITIAL_DATA__*/ null", init_data_str)
+                payload = rendered_html.encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(payload)))
-                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
                 self.send_header("Connection", "close")
                 self.end_headers()
                 if include_body:
