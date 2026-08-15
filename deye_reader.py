@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Deye 12K Hybrid Inverter (SUN-12K-SG04LP3) Modbus Reader
+Deye 12K Hybrid Inverter (SUN-12K-SG04LP3) Modbus Reader & Web Dashboard
 Reads telemetry values from Deye SUN-12K over TCP/Solarman V5.
 Default IP: 192.168.188.128 | Port: 8899 | Serial: Auto-discovered or 1109501211
 """
 
 import socket
+import socketserver
 import struct
 import sys
 import time
@@ -66,12 +67,23 @@ class DeyeModbusClient:
         )
 
     def read_holding_registers(self, start_reg: int, count: int) -> list:
-        if HAS_SOLARMAN:
-            if not self.solarman_client:
-                self._init_solarman()
-            return self.solarman_client.read_holding_registers(register_addr=start_reg, quantity=count)
-        else:
+        if not HAS_SOLARMAN:
             raise RuntimeError("pysolarmanv5 library not installed. Run: pip install pysolarmanv5")
+
+        if not self.solarman_client:
+            self._init_solarman()
+
+        try:
+            return self.solarman_client.read_holding_registers(register_addr=start_reg, quantity=count)
+        except Exception as e:
+            # Close stale connection on error to allow clean reconnect next time
+            try:
+                if self.solarman_client and hasattr(self.solarman_client, 'sock') and self.solarman_client.sock:
+                    self.solarman_client.sock.close()
+            except Exception:
+                pass
+            self.solarman_client = None
+            raise e
 
     def read_deye_12k_data(self) -> dict:
         data = {}
@@ -115,10 +127,13 @@ class DeyeModbusClient:
             data["grid_power_l3_w"] = to_signed16(b2[20])             # 606 (Grid Power L3)
             data["grid_power_total_w"] = to_signed16(b2[21])          # 607 (Total Grid Power / Bezug: + import, - export)
             
-            freq_raw = b2[22] if len(b2) > 22 and b2[22] > 0 else (b2[23] if len(b2) > 23 else 2500)  # 608 / 609 (Grid Frequency)
+            freq_raw = b2[22] if len(b2) > 22 and b2[22] > 0 else (b2[23] if len(b2) > 23 else 5000)  # 608 / 609 (Grid Frequency)
             if freq_raw > 10000:
                 freq_raw = 5000 + to_signed16(freq_raw)
-            data["grid_frequency_hz"] = round(freq_raw * 0.1, 2)
+            if freq_raw > 1000:
+                data["grid_frequency_hz"] = round(freq_raw * 0.01, 2)
+            else:
+                data["grid_frequency_hz"] = round(freq_raw * 0.1, 2)
         except Exception as e:
             data["block2_error"] = str(e)
 
@@ -168,7 +183,12 @@ class DeyeModbusClient:
 
         data["logger_serial"] = self.serial_number
         data["timestamp"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        data["online"] = True
         return data
+
+# --- Global telemetry storage & lock ---
+latest_telemetry = {}
+telemetry_lock = threading.Lock()
 
 # --- CLI Dashboard Formatting ---
 def render_terminal_dashboard(data: dict):
@@ -183,7 +203,7 @@ def render_terminal_dashboard(data: dict):
     print("\033[H\033[J", end="")  # Clear terminal
     print(f"{C_BOLD}{C_CYAN}========================================================================{C_RESET}")
     print(f"{C_BOLD}{C_YELLOW}        DEYE SUN-12K-SG04LP3 MODBUS TELEMETRIE LOG{C_RESET}")
-    print(f"        Zeitstempel: {data.get('timestamp')} | Logger SN: {data.get('logger_serial')}")
+    print(f"        Zeitstempel: {data.get('timestamp', 'N/A')} | Logger SN: {data.get('logger_serial', 'N/A')}")
     print(f"{C_BOLD}{C_CYAN}========================================================================{C_RESET}")
 
     st = data.get("status_text", "N/A")
@@ -225,119 +245,284 @@ def render_terminal_dashboard(data: dict):
     print(f"🌡️  Temperatur Inverter: DC Radiator: {data.get('temp_dc_celsius', 0)} °C | AC Radiator: {data.get('temp_ac_celsius', 0)} °C")
     print(f"{C_BOLD}{C_CYAN}========================================================================{C_RESET}")
 
-latest_telemetry = {}
-
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Deye 12K Solar Dashboard</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: #0b0f19;
+            --card-bg: #151e2e;
+            --card-inner: #1c273c;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
             --accent-solar: #f59e0b;
             --accent-bat: #10b981;
             --accent-grid: #3b82f6;
             --accent-load: #ec4899;
-            --border-color: #334155;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --danger: #ef4444;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+            padding: 14px;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         header {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+            gap: 10px;
         }
-        h1 { margin: 0; font-size: 1.6rem; color: #fbbf24; }
-        .badge {
-            background: #334155;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+        .header-title h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-title .sub {
+            font-size: 0.8rem;
             color: var(--text-sub);
+            margin-top: 2px;
+        }
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            border: 1px solid var(--border-color);
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            display: inline-block;
+        }
+        .dot.pulse {
+            animation: pulse-dot 1.8s infinite ease-in-out;
+        }
+        .dot.err {
+            background-color: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
         }
         .card {
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 14px;
+            padding: 16px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
         }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        .card-solar::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .card-bat::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .card-grid::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .card-load::before { background: linear-gradient(90deg, #ec4899, #f472b6); }
+
         .card-header {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
         }
         .metric-big {
             font-size: 2.2rem;
             font-weight: 800;
-            margin: 10px 0;
+            margin: 6px 0 12px 0;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
         }
         .solar-color { color: var(--accent-solar); }
         .bat-color { color: var(--accent-bat); }
         .grid-color { color: var(--accent-grid); }
         .load-color { color: var(--accent-load); }
-        .sub-metrics { margin-top: 15px; font-size: 0.9rem; color: var(--text-sub); }
-        .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #334155; }
+
+        .sub-metrics {
+            margin-top: auto;
+            font-size: 0.85rem;
+            background: var(--card-inner);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
         .row:last-child { border-bottom: none; }
+        .row span:first-child { color: var(--text-sub); }
         .val { color: var(--text-main); font-weight: 600; }
+        .val-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Power flow banner */
+        .flow-summary {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+        }
+        .flow-item {
+            flex: 1 1 120px;
+        }
+        .flow-label { font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+        .flow-val { font-size: 1.15rem; font-weight: 700; margin-top: 2px; }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            padding-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .metric-big { font-size: 1.85rem; }
+            .grid { grid-template-columns: 1fr; gap: 12px; }
+            .card { padding: 14px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div>
-                <h1>Deye SUN-12K Hybrid Inverter</h1>
-                <div style="font-size: 0.85rem; color: var(--text-sub);">Modbus TCP (Solarman V5) Telemetrie</div>
+            <div class="header-title">
+                <h1>⚡ Deye SUN-12K Hybrid Inverter</h1>
+                <div class="sub">Modbus TCP (Solarman V5) &bull; Live Telemetrie</div>
             </div>
-            <div class="badge" id="last-update">Lade Daten...</div>
+            <div class="header-status">
+                <div class="badge" id="status-badge">
+                    <span class="dot pulse" id="status-dot"></span>
+                    <span id="last-update">Verbinde...</span>
+                </div>
+            </div>
         </header>
+
+        <!-- Power Summary Bar -->
+        <div class="flow-summary">
+            <div class="flow-item">
+                <div class="flow-label">☀️ Erzeugung</div>
+                <div class="flow-val solar-color" id="sum-solar">0 W</div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-label">🔋 Speicher</div>
+                <div class="flow-val bat-color" id="sum-bat">0 %</div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-label">🔌 Netz</div>
+                <div class="flow-val grid-color" id="sum-grid">0 W</div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-label">🏠 Verbrauch</div>
+                <div class="flow-val load-color" id="sum-load">0 W</div>
+            </div>
+        </div>
 
         <div class="grid">
             <!-- PV Solar Card -->
-            <div class="card">
-                <div class="card-header solar-color">☀️ Solar PV Leistung</div>
-                <div class="metric-big solar-color" id="pv-total">0 W</div>
+            <div class="card card-solar">
+                <div>
+                    <div class="card-header solar-color">
+                        <span>☀️ Solar PV</span>
+                        <span class="val-badge" id="pv-today-badge">Heute: 0 kWh</span>
+                    </div>
+                    <div class="metric-big solar-color" id="pv-total">0 W</div>
+                </div>
                 <div class="sub-metrics">
                     <div class="row"><span>PV String 1:</span><span class="val" id="pv1">0 W</span></div>
                     <div class="row"><span>PV String 2:</span><span class="val" id="pv2">0 W</span></div>
-                    <div class="row"><span>PV Ertrag Heute:</span><span class="val" id="pv-today">0 kWh</span></div>
+                    <div class="row"><span>Tagesertrag:</span><span class="val" id="pv-today">0 kWh</span></div>
                 </div>
             </div>
 
             <!-- Battery Card -->
-            <div class="card">
-                <div class="card-header bat-color">🔋 Batterie Speicher</div>
-                <div class="metric-big bat-color" id="bat-soc">0 %</div>
+            <div class="card card-bat">
+                <div>
+                    <div class="card-header bat-color">
+                        <span>🔋 Batterie</span>
+                        <span class="val-badge" id="bat-status-badge">Standby</span>
+                    </div>
+                    <div class="metric-big bat-color" id="bat-soc">0 %</div>
+                </div>
                 <div class="sub-metrics">
                     <div class="row"><span>Leistung:</span><span class="val" id="bat-power">0 W</span></div>
-                    <div class="row"><span>Spannung / Strom:</span><span class="val" id="bat-vi">0 V / 0 A</span></div>
-                    <div class="row"><span>Temperatur:</span><span class="val" id="bat-temp">0 °C</span></div>
+                    <div class="row"><span>Spannung / Strom:</span><span class="val" id="bat-vi">0.0 V / 0.0 A</span></div>
+                    <div class="row"><span>Batterietemperatur:</span><span class="val" id="bat-temp">0 °C</span></div>
+                    <div class="row"><span>Ladung / Entladung:</span><span class="val" id="bat-today">0 / 0 kWh</span></div>
                 </div>
             </div>
 
             <!-- Grid Card -->
-            <div class="card">
-                <div class="card-header grid-color">🔌 Netzanschluss</div>
-                <div class="metric-big grid-color" id="grid-total">0 W</div>
+            <div class="card card-grid">
+                <div>
+                    <div class="card-header grid-color">
+                        <span>🔌 Netzanschluss</span>
+                        <span class="val-badge" id="grid-freq">50.0 Hz</span>
+                    </div>
+                    <div class="metric-big grid-color" id="grid-total">0 W</div>
+                </div>
                 <div class="sub-metrics">
                     <div class="row"><span>Phase L1:</span><span class="val" id="grid-l1">0 V / 0 W</span></div>
                     <div class="row"><span>Phase L2:</span><span class="val" id="grid-l2">0 V / 0 W</span></div>
@@ -347,75 +532,180 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
 
             <!-- Load Card -->
-            <div class="card">
-                <div class="card-header load-color">🏠 Hausverbrauch</div>
-                <div class="metric-big load-color" id="load-total">0 W</div>
+            <div class="card card-load">
+                <div>
+                    <div class="card-header load-color">
+                        <span>🏠 Hausverbrauch</span>
+                        <span class="val-badge" id="load-today-badge">Heute: 0 kWh</span>
+                    </div>
+                    <div class="metric-big load-color" id="load-total">0 W</div>
+                </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Phase L1 / L2 / L3:</span><span class="val" id="load-phases">0 / 0 / 0 W</span></div>
-                    <div class="row"><span>Verbrauch Heute:</span><span class="val" id="load-today">0 kWh</span></div>
+                    <div class="row"><span>Phasen L1 / L2 / L3:</span><span class="val" id="load-phases">0 / 0 / 0 W</span></div>
+                    <div class="row"><span>Tagesverbrauch:</span><span class="val" id="load-today">0 kWh</span></div>
                     <div class="row"><span>Inverter Temp (DC/AC):</span><span class="val" id="inv-temps">0 / 0 °C</span></div>
                 </div>
             </div>
         </div>
+
+        <footer>
+            <div id="footer-details">Deye SUN-12K &bull; Logger SN: ---</div>
+        </footer>
     </div>
 
     <script>
+        function fmtW(w) {
+            if (w === undefined || w === null || isNaN(w)) return "0 W";
+            const abs = Math.abs(w);
+            if (abs >= 1000) {
+                return (w / 1000).toFixed(2) + " kW";
+            }
+            return Math.round(w) + " W";
+        }
+
         async function fetchMetrics() {
             try {
-                const res = await fetch('/api/data');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch('/api/data', { signal: controller.signal, cache: 'no-store' });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 const d = await res.json();
                 
-                document.getElementById('last-update').innerText = 'Stand: ' + (d.timestamp || 'N/A') + ' (' + (d.status_text || '') + ')';
-                document.getElementById('pv-total').innerText = (d.pv_power_total_w || 0) + ' W';
-                document.getElementById('pv1').innerText = (d.pv1_power_w || 0) + ' W (' + (d.pv1_voltage_v || 0) + 'V, ' + (d.pv1_current_a || 0) + 'A)';
-                document.getElementById('pv2').innerText = (d.pv2_power_w || 0) + ' W (' + (d.pv2_voltage_v || 0) + 'V, ' + (d.pv2_current_a || 0) + 'A)';
+                if (!d || Object.keys(d).length === 0) {
+                    document.getElementById('last-update').innerText = 'Warte auf Wechselrichter...';
+                    return;
+                }
+
+                // Status
+                const dot = document.getElementById('status-dot');
+                dot.className = 'dot pulse';
+                const st = d.status_text || 'Normal';
+                const timeStr = d.timestamp ? d.timestamp.split(' ')[1] : '';
+                document.getElementById('last-update').innerText = timeStr + ' (' + st + ')';
+
+                // Flow summary
+                const pvTot = d.pv_power_total_w || 0;
+                const batPow = d.battery_power_w || 0;
+                const gridPow = d.grid_power_total_w || 0;
+                const loadTot = d.load_power_total_w || 0;
+
+                document.getElementById('sum-solar').innerText = fmtW(pvTot);
+                document.getElementById('sum-bat').innerText = (d.battery_soc_percent || 0) + ' %';
+                document.getElementById('sum-grid').innerText = (gridPow >= 0 ? '+' : '') + fmtW(gridPow);
+                document.getElementById('sum-load').innerText = fmtW(loadTot);
+
+                // PV Card
+                document.getElementById('pv-total').innerText = fmtW(pvTot);
+                document.getElementById('pv1').innerText = (d.pv1_power_w || 0) + ' W (' + (d.pv1_voltage_v || 0) + ' V, ' + (d.pv1_current_a || 0) + ' A)';
+                document.getElementById('pv2').innerText = (d.pv2_power_w || 0) + ' W (' + (d.pv2_voltage_v || 0) + ' V, ' + (d.pv2_current_a || 0) + ' A)';
                 document.getElementById('pv-today').innerText = (d.energy_pv_today_kwh || 0) + ' kWh';
+                document.getElementById('pv-today-badge').innerText = 'Heute: ' + (d.energy_pv_today_kwh || 0) + ' kWh';
 
-                document.getElementById('bat-soc').innerText = (d.battery_soc_percent || 0) + ' %';
-                document.getElementById('bat-power').innerText = (d.battery_power_w || 0) + ' W';
-                document.getElementById('bat-vi').innerText = (d.battery_voltage_v || 0) + ' V / ' + (d.battery_current_a || 0) + ' A';
+                // Battery Card
+                const soc = d.battery_soc_percent || 0;
+                document.getElementById('bat-soc').innerText = soc + ' %';
+                let batStatusText = 'Standby';
+                if (batPow > 20) batStatusText = 'Laden (' + fmtW(batPow) + ')';
+                else if (batPow < -20) batStatusText = 'Entladen (' + fmtW(Math.abs(batPow)) + ')';
+                document.getElementById('bat-status-badge').innerText = batStatusText;
+                document.getElementById('bat-power').innerText = (batPow >= 0 ? '+' : '') + fmtW(batPow);
+                document.getElementById('bat-vi').innerText = (d.battery_voltage_v || 0).toFixed(1) + ' V / ' + (d.battery_current_a || 0).toFixed(1) + ' A';
                 document.getElementById('bat-temp').innerText = (d.temp_battery_celsius || 0) + ' °C';
+                document.getElementById('bat-today').innerText = (d.energy_bat_charge_today_kwh || 0) + ' / ' + (d.energy_bat_dischg_today_kwh || 0) + ' kWh';
 
-                document.getElementById('grid-total').innerText = (d.grid_power_total_w || 0) + ' W';
-                document.getElementById('grid-l1').innerText = (d.grid_voltage_l1_v || 0) + 'V / ' + (d.grid_power_l1_w || 0) + 'W';
-                document.getElementById('grid-l2').innerText = (d.grid_voltage_l2_v || 0) + 'V / ' + (d.grid_power_l2_w || 0) + 'W';
-                document.getElementById('grid-l3').innerText = (d.grid_voltage_l3_v || 0) + 'V / ' + (d.grid_power_l3_w || 0) + 'W';
-                document.getElementById('grid-today').innerText = (d.energy_grid_buy_today_kwh || 0) + ' / ' + (d.energy_grid_sell_today_kwh || 0) + ' kWh';
+                // Grid Card
+                let gridLabel = gridPow >= 0 ? 'Bezug: ' + fmtW(gridPow) : 'Einspeisung: ' + fmtW(Math.abs(gridPow));
+                document.getElementById('grid-total').innerText = (gridPow >= 0 ? '+' : '') + fmtW(gridPow);
+                document.getElementById('grid-freq').innerText = (d.grid_frequency_hz || 50.0) + ' Hz';
+                document.getElementById('grid-l1').innerText = (d.grid_voltage_l1_v || 0) + ' V / ' + (d.grid_power_l1_w || 0) + ' W';
+                document.getElementById('grid-l2').innerText = (d.grid_voltage_l2_v || 0) + ' V / ' + (d.grid_power_l2_w || 0) + ' W';
+                document.getElementById('grid-l3').innerText = (d.grid_voltage_l3_v || 0) + ' V / ' + (d.grid_power_l3_w || 0) + ' W';
+                document.getElementById('grid-today').innerText = 'K: ' + (d.energy_grid_buy_today_kwh || 0) + ' / V: ' + (d.energy_grid_sell_today_kwh || 0) + ' kWh';
 
-                document.getElementById('load-total').innerText = (d.load_power_total_w || 0) + ' W';
+                // Load Card
+                document.getElementById('load-total').innerText = fmtW(loadTot);
                 document.getElementById('load-phases').innerText = (d.load_power_l1_w || 0) + ' / ' + (d.load_power_l2_w || 0) + ' / ' + (d.load_power_l3_w || 0) + ' W';
                 document.getElementById('load-today').innerText = (d.energy_load_today_kwh || 0) + ' kWh';
-                document.getElementById('inv-temps').innerText = (d.temp_dc_celsius || 0) + '°C / ' + (d.temp_ac_celsius || 0) + '°C';
+                document.getElementById('load-today-badge').innerText = 'Heute: ' + (d.energy_load_today_kwh || 0) + ' kWh';
+                document.getElementById('inv-temps').innerText = (d.temp_dc_celsius || 0) + ' °C / ' + (d.temp_ac_celsius || 0) + ' °C';
+
+                // Footer
+                if (d.logger_serial) {
+                    document.getElementById('footer-details').innerText = 'Deye SUN-12K &bull; Logger SN: ' + d.logger_serial + ' &bull; ' + (d.timestamp || '');
+                }
             } catch(e) {
-                console.error(e);
+                const dot = document.getElementById('status-dot');
+                if (dot) dot.className = 'dot err';
+                const lu = document.getElementById('last-update');
+                if (lu) lu.innerText = 'Verbindung unterbrochen...';
             }
         }
+
         fetchMetrics();
-        setInterval(fetchMetrics, 3000);
+        setInterval(fetchMetrics, 2500);
     </script>
 </body>
 </html>
 """
 
 class WebDashboardServer(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def do_HEAD(self):
+        self._handle_response(include_body=False)
+
     def do_GET(self):
-        if self.path == "/api/data":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(latest_telemetry).encode("utf-8"))
-        else:
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(HTML_TEMPLATE.encode("utf-8"))
-            
+        self._handle_response(include_body=True)
+
+    def _handle_response(self, include_body: bool = True):
+        parsed = self.path.split("?")[0]
+        try:
+            if parsed == "/api/data":
+                with telemetry_lock:
+                    payload = json.dumps(latest_telemetry).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(payload)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                if include_body:
+                    self.wfile.write(payload)
+            elif parsed == "/favicon.ico":
+                self.send_response(204)
+                self.send_header("Content-Length", "0")
+                self.send_header("Connection", "close")
+                self.end_headers()
+            else:
+                payload = HTML_TEMPLATE.encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(payload)))
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                if include_body:
+                    self.wfile.write(payload)
+        except Exception:
+            pass
+
     def log_message(self, format, *args):
+        # Suppress stdout access logs to keep terminal display clean
         pass
 
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
 def run_web_server(port: int):
-    server = HTTPServer(("0.0.0.0", port), WebDashboardServer)
-    server.serve_forever()
+    try:
+        server = ThreadedHTTPServer(("0.0.0.0", port), WebDashboardServer)
+        server.serve_forever()
+    except Exception as e:
+        print(f"Webserver-Fehler auf Port {port}: {e}", file=sys.stderr)
 
 def main():
     parser = argparse.ArgumentParser(description="Read Deye 12K Hybrid Inverter via Modbus TCP / Solarman V5")
@@ -448,7 +738,8 @@ def main():
         while True:
             try:
                 data = client.read_deye_12k_data()
-                latest_telemetry = data
+                with telemetry_lock:
+                    latest_telemetry = data
 
                 if args.json:
                     print(json.dumps(data, indent=2, ensure_ascii=False))
