@@ -227,52 +227,6 @@ class DeyeReader:
                 self.client = None
             raise e
 
-    def mock_telemetry(self):
-        """Simulated Deye SUN-12K telemetry values for testing/offline mode."""
-        return {
-            "status_code": 2,
-            "status_text": "Normal (Hybrid/Netzeinspeisung)",
-            "energy_grid_buy_today_kwh": 14.2,
-            "energy_grid_sell_today_kwh": 5.8,
-            "energy_bat_charge_today_kwh": 8.5,
-            "energy_bat_dischg_today_kwh": 6.2,
-            "energy_load_today_kwh": 19.5,
-            "energy_pv_today_kwh": 23.4,
-            "temp_dc_celsius": 38.5,
-            "temp_ac_celsius": 36.2,
-            "temp_battery_celsius": 24.5,
-            "battery_voltage_v": 53.20,
-            "battery_soc_percent": 85,
-            "battery_power_w": 1250,
-            "battery_current_a": 23.50,
-            "grid_voltage_l1_v": 230.5,
-            "grid_voltage_l2_v": 231.2,
-            "grid_voltage_l3_v": 229.8,
-            "grid_power_l1_w": -450,
-            "grid_power_l2_w": -320,
-            "grid_power_l3_w": -180,
-            "grid_power_total_w": -950,
-            "grid_frequency_hz": 50.00,
-            "inverter_power_l1_w": 1420,
-            "inverter_power_l2_w": 1380,
-            "inverter_power_l3_w": 1150,
-            "inverter_power_total_w": 3950,
-            "load_power_l1_w": 970,
-            "load_power_l2_w": 1060,
-            "load_power_l3_w": 970,
-            "load_power_total_w": 3000,
-            "pv1_voltage_v": 345.0,
-            "pv1_current_a": 8.2,
-            "pv1_power_w": 2829.0,
-            "pv2_voltage_v": 342.0,
-            "pv2_current_a": 7.9,
-            "pv2_power_w": 2701.8,
-            "pv_power_total_w": 5530.8,
-            "logger_serial": self.serial,
-            "online": True,
-            "mode": "SIMULATION / DEMO"
-        }
-
 def render_terminal_dashboard(data):
     """Outputs an ANSI-color formatted dashboard directly in the PocketPy terminal."""
     C_RESET = "\033[0m"
@@ -427,15 +381,8 @@ def main():
     SERIAL = 1109501211
 
     reader = DeyeReader(host=HOST, port=PORT, serial=SERIAL)
-
-    try:
-        print(f"Verbinde zu Deye Inverter ({HOST}:{PORT})...")
-        data = reader.read_telemetry()
-    except Exception as e:
-        print(f"Verbindungsfehler: {e}")
-        print("Lade simulierte Deye-Telemetriedaten (Demo-Modus)...")
-        data = reader.mock_telemetry()
-
+    print(f"Verbinde zu Deye Inverter ({HOST}:{PORT})...")
+    data = reader.read_telemetry()
     render_terminal_dashboard(data)
     write_html_dashboard(data, "deye_dashboard.html")
 
