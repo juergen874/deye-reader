@@ -250,203 +250,411 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Deye 12K Solar Dashboard</title>
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #151e2e;
-            --card-inner: #1c273c;
+            --bg-base: #060913;
+            --bg-card: #0d1527;
+            --bg-card-inner: #142038;
+            --bg-card-hover: #1a2948;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
+            --text-dim: #64748b;
             --accent-solar: #f59e0b;
+            --accent-solar-glow: rgba(245, 158, 11, 0.22);
             --accent-bat: #10b981;
-            --accent-grid: #3b82f6;
+            --accent-bat-glow: rgba(16, 185, 129, 0.22);
+            --accent-grid: #38bdf8;
+            --accent-grid-import: #f97316;
+            --accent-grid-export: #10b981;
             --accent-load: #ec4899;
+            --accent-load-glow: rgba(236, 72, 153, 0.22);
             --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.15);
             --danger: #ef4444;
+            --card-radius: 14px;
+            --font-scale: 1;
         }
-        * { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* TV 10-Foot Mode Variables */
+        body.tv-mode {
+            --font-scale: 1.18;
+            padding: 12px 18px;
+        }
+
+        * {
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
-            background-color: #0b0f19;
-            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #060913;
+            background-color: var(--bg-base);
             color: #f8fafc;
             color: var(--text-main);
-            padding: 16px;
+            padding: 14px 16px;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            font-size: calc(15px * var(--font-scale));
         }
-        .container { max-width: 1200px; margin: 0 auto; }
+
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+        }
+
+        /* Focus styles for LG Magic Remote & D-Pad navigation */
+        button:focus-visible, a:focus-visible, .focusable:focus-visible {
+            outline: 3px solid #38bdf8;
+            outline-offset: 2px;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+        }
+
+        /* Top Header */
         header {
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-flex-wrap: wrap;
-            -ms-flex-wrap: wrap;
             flex-wrap: wrap;
             -webkit-box-pack: justify;
             -webkit-justify-content: space-between;
-            -ms-flex-pack: justify;
             justify-content: space-between;
             -webkit-box-align: center;
             -webkit-align-items: center;
-            -ms-flex-align: center;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
-            margin-bottom: 18px;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            gap: 10px;
         }
-        .header-title h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #fbbf24;
-        }
-        .header-title .sub {
-            font-size: 0.82rem;
-            color: #94a3b8;
-            color: var(--text-sub);
-            margin-top: 3px;
-        }
-        .header-status {
+
+        .header-title {
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-box-align: center;
             -webkit-align-items: center;
-            -ms-flex-align: center;
             align-items: center;
-            margin-top: 6px;
+            gap: 12px;
         }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: -webkit-linear-gradient(315deg, #f59e0b, #ec4899);
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);
+        }
+
+        .header-text h1 {
+            font-size: calc(1.35rem * var(--font-scale));
+            font-weight: 700;
+            color: #fbbf24;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .header-text .sub {
+            font-size: calc(0.8rem * var(--font-scale));
+            color: #94a3b8;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        .header-controls {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            gap: 8px;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+        }
+
         .badge {
             display: -webkit-inline-box;
             display: -webkit-inline-flex;
-            display: -ms-inline-flexbox;
             display: inline-flex;
             -webkit-box-align: center;
             -webkit-align-items: center;
-            -ms-flex-align: center;
             align-items: center;
-            background: #1e293b;
-            padding: 6px 14px;
+            background: #142038;
+            background: var(--bg-card-inner);
+            padding: 5px 12px;
             border-radius: 9999px;
-            font-size: 0.85rem;
+            font-size: calc(0.82rem * var(--font-scale));
             font-weight: 500;
             color: #94a3b8;
             color: var(--text-sub);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
         }
+
+        .badge-btn {
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #142038;
+            color: #f8fafc;
+            font-family: inherit;
+            padding: 5px 11px;
+            border-radius: 9999px;
+            font-size: calc(0.8rem * var(--font-scale));
+            font-weight: 600;
+            display: -webkit-inline-box;
+            display: -webkit-inline-flex;
+            display: inline-flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.15s, border-color 0.15s, transform 0.15s;
+        }
+
+        .badge-btn:hover, .badge-btn:focus {
+            background: #1e2c47;
+            border-color: #38bdf8;
+        }
+
+        .badge-btn.active {
+            background: #38bdf8;
+            color: #060913;
+            border-color: #38bdf8;
+            font-weight: 700;
+        }
+
         .dot {
-            width: 9px;
-            height: 9px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background-color: #10b981;
             box-shadow: 0 0 8px #10b981;
             display: inline-block;
-            margin-right: 8px;
+            margin-right: 7px;
         }
+
         .dot.pulse {
             -webkit-animation: pulse-dot 1.8s infinite ease-in-out;
             animation: pulse-dot 1.8s infinite ease-in-out;
         }
+
         .dot.err {
             background-color: #ef4444;
             box-shadow: 0 0 8px #ef4444;
         }
+
         @-webkit-keyframes pulse-dot {
             0%, 100% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
-            50% { opacity: 0.4; -webkit-transform: scale(0.85); transform: scale(0.85); }
+            50% { opacity: 0.4; -webkit-transform: scale(0.8); transform: scale(0.8); }
         }
+
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.85); }
+            50% { opacity: 0.4; transform: scale(0.8); }
         }
-        .flow-summary {
-            background: #151e2e;
-            background: var(--card-bg);
+
+        /* Power Flow Hub Diagram & Summary */
+        .flow-section {
+            background: #0d1527;
+            background: var(--bg-card);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
+            border-radius: var(--card-radius);
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        .flow-summary-bar {
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-flex-wrap: wrap;
-            -ms-flex-wrap: wrap;
             flex-wrap: wrap;
-            -webkit-justify-content: space-around;
-            -ms-flex-pack: distribute;
-            justify-content: space-around;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            justify-content: space-between;
             -webkit-box-align: center;
             -webkit-align-items: center;
-            -ms-flex-align: center;
             align-items: center;
-            text-align: center;
+            gap: 8px;
         }
+
         .flow-item {
             -webkit-box-flex: 1;
-            -webkit-flex: 1 1 120px;
-            -ms-flex: 1 1 120px;
-            flex: 1 1 120px;
-            margin: 4px;
+            -webkit-flex: 1 1 140px;
+            flex: 1 1 140px;
+            text-align: center;
+            padding: 8px 10px;
+            background: #142038;
+            background: var(--bg-card-inner);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
         }
+
+        .flow-item:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
         .flow-label {
-            font-size: 0.78rem;
+            font-size: calc(0.74rem * var(--font-scale));
             color: #94a3b8;
             color: var(--text-sub);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            gap: 5px;
         }
+
         .flow-val {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: calc(1.32rem * var(--font-scale));
+            font-weight: 800;
             margin-top: 3px;
+            letter-spacing: -0.5px;
+            font-variant-numeric: tabular-nums;
         }
+
+        .flow-sub {
+            font-size: calc(0.75rem * var(--font-scale));
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        /* Flow Diagram Center Canvas */
+        .flow-diagram-container {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+        }
+
+        .flow-diagram {
+            width: 100%;
+            max-width: 680px;
+            height: 120px;
+            position: relative;
+        }
+
+        svg.flow-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .flow-line {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.12);
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+
+        .flow-line-active {
+            stroke-dasharray: 6 6;
+            -webkit-animation: flow-dash 1.2s linear infinite;
+            animation: flow-dash 1.2s linear infinite;
+        }
+
+        .flow-line-reverse {
+            stroke-dasharray: 6 6;
+            -webkit-animation: flow-dash-rev 1.2s linear infinite;
+            animation: flow-dash-rev 1.2s linear infinite;
+        }
+
+        @-webkit-keyframes flow-dash {
+            to { stroke-dashoffset: -24; }
+        }
+
+        @keyframes flow-dash {
+            to { stroke-dashoffset: -24; }
+        }
+
+        @-webkit-keyframes flow-dash-rev {
+            to { stroke-dashoffset: 24; }
+        }
+
+        @keyframes flow-dash-rev {
+            to { stroke-dashoffset: 24; }
+        }
+
+        /* 4 Main KPI Cards Grid */
         .grid {
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-flex-wrap: wrap;
-            -ms-flex-wrap: wrap;
             flex-wrap: wrap;
-            margin: -8px;
+            margin: -6px;
         }
+
         .card {
             -webkit-box-flex: 1;
-            -webkit-flex: 1 1 calc(50% - 16px);
-            -ms-flex: 1 1 calc(50% - 16px);
-            flex: 1 1 calc(50% - 16px);
-            min-width: 280px;
-            margin: 8px;
-            background: #151e2e;
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 16px;
+            -webkit-flex: 1 1 calc(50% - 12px);
+            flex: 1 1 calc(50% - 12px);
+            min-width: 300px;
+            margin: 6px;
+            background: #0d1527;
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            padding: 14px 16px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
-            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-box-orient: vertical;
             -webkit-box-direction: normal;
             -webkit-flex-direction: column;
-            -ms-flex-direction: column;
             flex-direction: column;
             -webkit-box-pack: justify;
             -webkit-justify-content: space-between;
-            -ms-flex-pack: justify;
             justify-content: space-between;
             position: relative;
             overflow: hidden;
+            transition: border-color 0.2s;
         }
+
+        .card:hover {
+            border-color: var(--border-highlight);
+        }
+
         .card::before {
             content: '';
             position: absolute;
@@ -455,199 +663,394 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             right: 0;
             height: 3px;
         }
+
         .card-solar::before { background: #f59e0b; }
         .card-bat::before { background: #10b981; }
-        .card-grid::before { background: #3b82f6; }
+        .card-grid::before { background: #38bdf8; }
         .card-load::before { background: #ec4899; }
 
         .card-header {
-            font-size: 1.1rem;
+            font-size: calc(1.05rem * var(--font-scale));
             font-weight: 700;
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-box-pack: justify;
             -webkit-justify-content: space-between;
-            -ms-flex-pack: justify;
             justify-content: space-between;
             -webkit-box-align: center;
             -webkit-align-items: center;
-            -ms-flex-align: center;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
+
+        .card-title-group {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            gap: 6px;
+        }
+
         .metric-big {
-            font-size: 2.2rem;
+            font-size: calc(2.35rem * var(--font-scale));
             font-weight: 800;
-            margin: 6px 0 12px 0;
-            letter-spacing: -0.5px;
+            margin: 4px 0 10px 0;
+            letter-spacing: -0.8px;
             line-height: 1.1;
+            font-variant-numeric: tabular-nums;
         }
+
         .solar-color { color: #f59e0b; color: var(--accent-solar); }
         .bat-color { color: #10b981; color: var(--accent-bat); }
-        .grid-color { color: #3b82f6; color: var(--accent-grid); }
+        .grid-color { color: #38bdf8; color: var(--accent-grid); }
         .load-color { color: #ec4899; color: var(--accent-load); }
+
+        /* Battery progress bar */
+        .bat-gauge-wrap {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 6px 0 10px 0;
+            position: relative;
+        }
+
+        .bat-gauge-fill {
+            height: 100%;
+            width: 0%;
+            background: -webkit-linear-gradient(left, #10b981, #34d399);
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 4px;
+            transition: width 0.4s ease, background-color 0.3s;
+        }
 
         .sub-metrics {
             margin-top: auto;
-            font-size: 0.88rem;
-            background: #1c273c;
-            background: var(--card-inner);
-            padding: 10px 12px;
+            font-size: calc(0.85rem * var(--font-scale));
+            background: #142038;
+            background: var(--bg-card-inner);
+            padding: 8px 12px;
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
+
         .row {
             display: -webkit-box;
             display: -webkit-flex;
-            display: -ms-flexbox;
             display: flex;
             -webkit-box-pack: justify;
             -webkit-justify-content: space-between;
-            -ms-flex-pack: justify;
             justify-content: space-between;
             -webkit-box-align: center;
             -webkit-align-items: center;
-            -ms-flex-align: center;
             align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
-        .row:last-child { border-bottom: none; }
-        .row span:first-child { color: #94a3b8; color: var(--text-sub); }
-        .val { color: #f8fafc; color: var(--text-main); font-weight: 600; }
-        .val-badge {
-            font-size: 0.78rem;
-            padding: 3px 8px;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.1);
+
+        .row:last-child {
+            border-bottom: none;
         }
-        footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 0.8rem;
+
+        .row span:first-child {
             color: #94a3b8;
             color: var(--text-sub);
-            padding-top: 10px;
         }
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .card { -webkit-flex-basis: 100%; -ms-flex-basis: 100%; flex-basis: 100%; margin: 6px 0; }
-            .metric-big { font-size: 1.85rem; }
+
+        .val {
+            color: #f8fafc;
+            color: var(--text-main);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .val-badge {
+            font-size: calc(0.76rem * var(--font-scale));
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 600;
+        }
+
+        .badge-solar { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+        .badge-bat { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+        .badge-grid { background: rgba(56, 189, 248, 0.18); color: #38bdf8; }
+        .badge-load { background: rgba(236, 72, 153, 0.18); color: #f472b6; }
+
+        /* Footer */
+        footer {
+            margin-top: 14px;
+            text-align: center;
+            font-size: calc(0.78rem * var(--font-scale));
+            color: #64748b;
+            color: var(--text-dim);
+            padding: 6px 0;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-pack: justify;
+            -webkit-justify-content: space-between;
+            justify-content: space-between;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        /* Large Screen & TV optimizations (1080p / 4K) */
+        @media (min-width: 1400px) and (min-height: 800px) {
+            body:not(.tv-mode) {
+                --font-scale: 1.1;
+                padding: 16px 24px;
+            }
+        }
+
+        @media (max-width: 680px) {
+            body { padding: 8px; }
+            .card { -webkit-flex-basis: 100%; flex-basis: 100%; min-width: 100%; margin: 4px 0; }
+            .metric-big { font-size: 2rem; }
+            .flow-diagram-container { display: none; }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Top Navigation Header -->
         <header>
             <div class="header-title">
-                <h1>⚡ Deye SUN-12K Hybrid Inverter</h1>
-                <div class="sub">Modbus TCP (Solarman V5) &bull; Live Telemetrie</div>
+                <div class="header-icon">⚡</div>
+                <div class="header-text">
+                    <h1>Deye SUN-12K Hybrid Inverter</h1>
+                    <div class="sub" id="header-meta">Modbus TCP &bull; Solarman V5 &bull; Live Telemetrie</div>
+                </div>
             </div>
-            <div class="header-status">
+            <div class="header-controls">
+                <div class="badge" id="clock-badge">
+                    <span id="live-clock">--:--:--</span>
+                </div>
                 <div class="badge" id="status-badge">
                     <span class="dot pulse" id="status-dot"></span>
                     <span id="last-update">Verbinde...</span>
                 </div>
+                <button type="button" class="badge-btn focusable" id="btn-tv" onclick="toggleTvMode()" title="10-Foot TV Ansicht umschalten (Taste T)" tabindex="0">
+                    📺 TV-Modus
+                </button>
+                <button type="button" class="badge-btn focusable" id="btn-fullscreen" onclick="toggleFullscreen()" title="Vollbild umschalten (Taste F)" tabindex="0">
+                    ⛶ Vollbild
+                </button>
+                <button type="button" class="badge-btn focusable" id="btn-refresh" onclick="fetchMetrics()" title="Jetzt aktualisieren (Taste R)" tabindex="0">
+                    🔄
+                </button>
             </div>
         </header>
 
-        <!-- Power Summary Bar -->
-        <div class="flow-summary">
-            <div class="flow-item">
-                <div class="flow-label">☀️ Erzeugung</div>
-                <div class="flow-val solar-color" id="sum-solar">-- W</div>
+        <!-- Power Summary & Live Flow Visualizer -->
+        <div class="flow-section">
+            <div class="flow-summary-bar">
+                <div class="flow-item">
+                    <div class="flow-label solar-color">☀️ Solar Erzeugung</div>
+                    <div class="flow-val solar-color" id="sum-solar">-- W</div>
+                    <div class="flow-sub" id="sum-solar-sub">Heute: -- kWh</div>
+                </div>
+                <div class="flow-item">
+                    <div class="flow-label bat-color">🔋 Batteriespeicher</div>
+                    <div class="flow-val bat-color" id="sum-bat">-- %</div>
+                    <div class="flow-sub" id="sum-bat-sub">Standby</div>
+                </div>
+                <div class="flow-item">
+                    <div class="flow-label grid-color">🔌 Netzanschluss</div>
+                    <div class="flow-val grid-color" id="sum-grid">-- W</div>
+                    <div class="flow-sub" id="sum-grid-sub">50.00 Hz</div>
+                </div>
+                <div class="flow-item">
+                    <div class="flow-label load-color">🏠 Hausverbrauch</div>
+                    <div class="flow-val load-color" id="sum-load">-- W</div>
+                    <div class="flow-sub" id="sum-load-sub">Heute: -- kWh</div>
+                </div>
+                <div class="flow-item">
+                    <div class="flow-label" style="color: #38bdf8;">🌿 Autarkiegrad</div>
+                    <div class="flow-val" style="color: #38bdf8;" id="sum-autarky">-- %</div>
+                    <div class="flow-sub" id="sum-autarky-sub">Solar + Akku</div>
+                </div>
             </div>
-            <div class="flow-item">
-                <div class="flow-label">🔋 Speicher</div>
-                <div class="flow-val bat-color" id="sum-bat">-- %</div>
-            </div>
-            <div class="flow-item">
-                <div class="flow-label">🔌 Netz</div>
-                <div class="flow-val grid-color" id="sum-grid">-- W</div>
-            </div>
-            <div class="flow-item">
-                <div class="flow-label">🏠 Verbrauch</div>
-                <div class="flow-val load-color" id="sum-load">-- W</div>
+
+            <!-- Animated SVG Flow Diagram -->
+            <div class="flow-diagram-container">
+                <div class="flow-diagram">
+                    <svg class="flow-svg" viewBox="0 0 600 90" preserveAspectRatio="xMidYMid meet">
+                        <!-- Node Definitions: PV(75, 45), BAT(225, 45), INV(300, 45), GRID(375, 45), LOAD(525, 45) -->
+                        <!-- Line 1: PV -> INV -->
+                        <line id="line-pv-inv" x1="100" y1="45" x2="260" y2="45" class="flow-line" />
+                        <!-- Line 2: INV <-> BAT -->
+                        <line id="line-inv-bat" x1="260" y1="45" x2="200" y2="45" class="flow-line" />
+                        <!-- Line 3: INV <-> GRID -->
+                        <line id="line-inv-grid" x1="340" y1="45" x2="400" y2="45" class="flow-line" />
+                        <!-- Line 4: INV -> LOAD -->
+                        <line id="line-inv-load" x1="340" y1="45" x2="500" y2="45" class="flow-line" />
+
+                        <!-- Center Inverter Hub -->
+                        <circle cx="300" cy="45" r="24" fill="#142038" stroke="#6366f1" stroke-width="2.5" />
+                        <text x="300" y="42" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="700">DEYE</text>
+                        <text x="300" y="55" text-anchor="middle" fill="#94a3b8" font-size="8">12K</text>
+
+                        <!-- Solar Node -->
+                        <circle cx="75" cy="45" r="20" fill="#142038" stroke="#f59e0b" stroke-width="2" />
+                        <text x="75" y="49" text-anchor="middle" font-size="14">☀️</text>
+
+                        <!-- Battery Node -->
+                        <circle cx="180" cy="45" r="20" fill="#142038" stroke="#10b981" stroke-width="2" />
+                        <text x="180" y="49" text-anchor="middle" font-size="14">🔋</text>
+
+                        <!-- Grid Node -->
+                        <circle cx="420" cy="45" r="20" fill="#142038" stroke="#38bdf8" stroke-width="2" />
+                        <text x="420" y="49" text-anchor="middle" font-size="14">🔌</text>
+
+                        <!-- Load Node -->
+                        <circle cx="525" cy="45" r="20" fill="#142038" stroke="#ec4899" stroke-width="2" />
+                        <text x="525" y="49" text-anchor="middle" font-size="14">🏠</text>
+                    </svg>
+                </div>
             </div>
         </div>
 
+        <!-- 4 Detailed KPI Cards -->
         <div class="grid">
-            <!-- PV Solar Card -->
+            <!-- 1. PV Solar Card -->
             <div class="card card-solar">
                 <div>
                     <div class="card-header solar-color">
-                        <span>☀️ Solar PV</span>
-                        <span class="val-badge" id="pv-today-badge">Heute: -- kWh</span>
+                        <div class="card-title-group">
+                            <span>☀️</span>
+                            <span>Photovoltaik (PV)</span>
+                        </div>
+                        <span class="val-badge badge-solar" id="pv-today-badge">Heute: -- kWh</span>
                     </div>
                     <div class="metric-big solar-color" id="pv-total">-- W</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>PV String 1:</span><span class="val" id="pv1">--</span></div>
-                    <div class="row"><span>PV String 2:</span><span class="val" id="pv2">--</span></div>
-                    <div class="row"><span>Tagesertrag:</span><span class="val" id="pv-today">-- kWh</span></div>
+                    <div class="row">
+                        <span>String 1:</span>
+                        <span class="val" id="pv1">-- W (-- V, -- A)</span>
+                    </div>
+                    <div class="row">
+                        <span>String 2:</span>
+                        <span class="val" id="pv2">-- W (-- V, -- A)</span>
+                    </div>
+                    <div class="row">
+                        <span>Tagesertrag Solar:</span>
+                        <span class="val" id="pv-today">-- kWh</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Battery Card -->
+            <!-- 2. Battery Card -->
             <div class="card card-bat">
                 <div>
                     <div class="card-header bat-color">
-                        <span>🔋 Batterie</span>
-                        <span class="val-badge" id="bat-status-badge">Lade...</span>
+                        <div class="card-title-group">
+                            <span>🔋</span>
+                            <span>Batteriespeicher</span>
+                        </div>
+                        <span class="val-badge badge-bat" id="bat-status-badge">Standby</span>
                     </div>
                     <div class="metric-big bat-color" id="bat-soc">-- %</div>
+                    <div class="bat-gauge-wrap">
+                        <div class="bat-gauge-fill" id="bat-gauge-fill"></div>
+                    </div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Leistung:</span><span class="val" id="bat-power">-- W</span></div>
-                    <div class="row"><span>Spannung / Strom:</span><span class="val" id="bat-vi">-- V / -- A</span></div>
-                    <div class="row"><span>Batterietemperatur:</span><span class="val" id="bat-temp">-- °C</span></div>
-                    <div class="row"><span>Ladung / Entladung:</span><span class="val" id="bat-today">-- / -- kWh</span></div>
+                    <div class="row">
+                        <span>Ladeleistung:</span>
+                        <span class="val" id="bat-power">-- W</span>
+                    </div>
+                    <div class="row">
+                        <span>Spannung / Strom:</span>
+                        <span class="val" id="bat-vi">-- V / -- A</span>
+                    </div>
+                    <div class="row">
+                        <span>Batterietemperatur:</span>
+                        <span class="val" id="bat-temp">-- &deg;C</span>
+                    </div>
+                    <div class="row">
+                        <span>Ladung / Entladung Heute:</span>
+                        <span class="val" id="bat-today">-- / -- kWh</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Grid Card -->
+            <!-- 3. Grid Card -->
             <div class="card card-grid">
                 <div>
                     <div class="card-header grid-color">
-                        <span>🔌 Netzanschluss</span>
-                        <span class="val-badge" id="grid-freq">-- Hz</span>
+                        <div class="card-title-group">
+                            <span>🔌</span>
+                            <span>Netzanschluss</span>
+                        </div>
+                        <span class="val-badge badge-grid" id="grid-freq">50.00 Hz</span>
                     </div>
                     <div class="metric-big grid-color" id="grid-total">-- W</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Phase L1:</span><span class="val" id="grid-l1">-- V / -- W</span></div>
-                    <div class="row"><span>Phase L2:</span><span class="val" id="grid-l2">-- V / -- W</span></div>
-                    <div class="row"><span>Phase L3:</span><span class="val" id="grid-l3">-- V / -- W</span></div>
-                    <div class="row"><span>Kauf / Verkauf Heute:</span><span class="val" id="grid-today">--</span></div>
+                    <div class="row">
+                        <span>Phase L1:</span>
+                        <span class="val" id="grid-l1">-- V / -- W</span>
+                    </div>
+                    <div class="row">
+                        <span>Phase L2:</span>
+                        <span class="val" id="grid-l2">-- V / -- W</span>
+                    </div>
+                    <div class="row">
+                        <span>Phase L3:</span>
+                        <span class="val" id="grid-l3">-- V / -- W</span>
+                    </div>
+                    <div class="row">
+                        <span>Kauf / Verkauf Heute:</span>
+                        <span class="val" id="grid-today">-- / -- kWh</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Load Card -->
+            <!-- 4. Load & Inverter Card -->
             <div class="card card-load">
                 <div>
                     <div class="card-header load-color">
-                        <span>🏠 Hausverbrauch</span>
-                        <span class="val-badge" id="load-today-badge">Heute: -- kWh</span>
+                        <div class="card-title-group">
+                            <span>🏠</span>
+                            <span>Hausverbrauch</span>
+                        </div>
+                        <span class="val-badge badge-load" id="load-today-badge">Heute: -- kWh</span>
                     </div>
                     <div class="metric-big load-color" id="load-total">-- W</div>
                 </div>
                 <div class="sub-metrics">
-                    <div class="row"><span>Phasen L1 / L2 / L3:</span><span class="val" id="load-phases">-- / -- / -- W</span></div>
-                    <div class="row"><span>Tagesverbrauch:</span><span class="val" id="load-today">-- kWh</span></div>
-                    <div class="row"><span>Inverter Temp (DC/AC):</span><span class="val" id="inv-temps">-- / -- °C</span></div>
+                    <div class="row">
+                        <span>Phasen L1 / L2 / L3:</span>
+                        <span class="val" id="load-phases">-- / -- / -- W</span>
+                    </div>
+                    <div class="row">
+                        <span>Tagesverbrauch Haus:</span>
+                        <span class="val" id="load-today">-- kWh</span>
+                    </div>
+                    <div class="row">
+                        <span>Inverter Temp (DC / AC):</span>
+                        <span class="val" id="inv-temps">-- / -- &deg;C</span>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Footer Info -->
         <footer>
-            <div id="footer-details">Deye SUN-12K &bull; Logger SN: ---</div>
+            <div id="footer-details">Deye SUN-12K-SG04LP3 &bull; Logger SN: ---</div>
+            <div>LG TV / Chrome 101 optimiert &bull; Tasten: [T] TV-Modus &bull; [F] Vollbild &bull; [R] Refresh</div>
         </footer>
     </div>
 
     <script>
+        // --- Helper: Format Watts / kW ---
         function fmtW(w) {
             if (w === undefined || w === null || isNaN(w)) return "0 W";
             var num = Number(w);
@@ -660,22 +1063,95 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         function setElText(id, text) {
             var el = document.getElementById(id);
-            if (el) {
-                el.innerText = text;
+            if (el && el.textContent !== text) {
+                el.textContent = text;
             }
         }
 
+        // --- Live Clock ---
+        function updateClock() {
+            var now = new Date();
+            var h = String(now.getHours()).padStart(2, '0');
+            var m = String(now.getMinutes()).padStart(2, '0');
+            var s = String(now.getSeconds()).padStart(2, '0');
+            setElText('live-clock', h + ':' + m + ':' + s);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- TV Mode & Fullscreen Management ---
+        function toggleTvMode() {
+            var isTv = document.body.classList.toggle('tv-mode');
+            var btn = document.getElementById('btn-tv');
+            if (btn) {
+                if (isTv) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+            try {
+                localStorage.setItem('deye_tv_mode', isTv ? '1' : '0');
+            } catch(e) {}
+        }
+
+        // Restore TV Mode preference
+        try {
+            if (localStorage.getItem('deye_tv_mode') === '1') {
+                document.body.classList.add('tv-mode');
+                var tvBtn = document.getElementById('btn-tv');
+                if (tvBtn) tvBtn.classList.add('active');
+            }
+        } catch(e) {}
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(function(){});
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(function(){});
+                }
+            }
+        }
+
+        document.addEventListener('fullscreenchange', function() {
+            var btn = document.getElementById('btn-fullscreen');
+            if (btn) {
+                if (document.fullscreenElement) {
+                    btn.classList.add('active');
+                    btn.textContent = '✕ Verlassen';
+                } else {
+                    btn.classList.remove('active');
+                    btn.textContent = '⛶ Vollbild';
+                }
+            }
+        });
+
+        // Keyboard shortcuts for LG Magic Remote & keyboard
+        window.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            var key = e.key ? e.key.toLowerCase() : '';
+            if (key === 'f') {
+                toggleFullscreen();
+            } else if (key === 't') {
+                toggleTvMode();
+            } else if (key === 'r') {
+                fetchMetrics();
+            }
+        });
+
+        // --- Update UI with Telemetry Data ---
         function updateUI(d) {
             if (!d || typeof d !== 'object' || Object.keys(d).length === 0) {
                 setElText('last-update', 'Warte auf Wechselrichter...');
                 return;
             }
 
-            // Status indicator
+            // Status Indicator
             var dot = document.getElementById('status-dot');
-            if (dot) {
-                dot.className = 'dot pulse';
-            }
+            if (dot) dot.className = 'dot pulse';
             var st = d.status_text || 'Normal';
             var timeStr = '';
             if (d.timestamp) {
@@ -684,19 +1160,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             }
             setElText('last-update', (timeStr ? timeStr + ' ' : '') + '(' + st + ')');
 
-            // Flow summary
+            // Core Power Values
             var pvTot = (typeof d.pv_power_total_w === 'number') ? d.pv_power_total_w : 0;
             var batPow = (typeof d.battery_power_w === 'number') ? d.battery_power_w : 0;
             var gridPow = (typeof d.grid_power_total_w === 'number') ? d.grid_power_total_w : 0;
             var loadTot = (typeof d.load_power_total_w === 'number') ? d.load_power_total_w : 0;
+            var soc = (d.battery_soc_percent !== undefined) ? d.battery_soc_percent : 0;
 
+            // Summary Bar
             setElText('sum-solar', fmtW(pvTot));
-            setElText('sum-bat', (d.battery_soc_percent !== undefined ? d.battery_soc_percent : 0) + ' %');
-            setElText('sum-grid', (gridPow >= 0 ? '+' : '') + fmtW(gridPow));
-            setElText('sum-load', fmtW(loadTot));
+            var pvToday = (typeof d.energy_pv_today_kwh === 'number') ? d.energy_pv_today_kwh.toFixed(1) : '0.0';
+            setElText('sum-solar-sub', 'Heute: ' + pvToday + ' kWh');
 
-            // PV Card
+            setElText('sum-bat', soc + ' %');
+            var batStatusText = 'Standby';
+            if (batPow > 20) {
+                batStatusText = 'Laden (' + fmtW(batPow) + ')';
+            } else if (batPow < -20) {
+                batStatusText = 'Entladen (' + fmtW(Math.abs(batPow)) + ')';
+            }
+            setElText('sum-bat-sub', batStatusText);
+
+            var gridText = (gridPow > 20) ? ('Bezug ' + fmtW(gridPow)) : ((gridPow < -20) ? ('Einspeisung ' + fmtW(Math.abs(gridPow))) : '0 W');
+            var gridEl = document.getElementById('sum-grid');
+            if (gridEl) {
+                gridEl.textContent = (gridPow >= 0 ? '+' : '') + fmtW(gridPow);
+                gridEl.style.color = (gridPow < -20) ? '#10b981' : ((gridPow > 20) ? '#f97316' : '#38bdf8');
+            }
+            setElText('sum-grid-sub', (typeof d.grid_frequency_hz === 'number' ? d.grid_frequency_hz.toFixed(2) : '50.00') + ' Hz');
+
+            setElText('sum-load', fmtW(loadTot));
+            var loadToday = (typeof d.energy_load_today_kwh === 'number') ? d.energy_load_today_kwh.toFixed(1) : '0.0';
+            setElText('sum-load-sub', 'Heute: ' + loadToday + ' kWh');
+
+            // Autarky calculation
+            var autarky = 100;
+            if (loadTot > 0) {
+                var gridImport = Math.max(0, gridPow);
+                autarky = Math.round(Math.max(0, Math.min(100, (1 - (gridImport / loadTot)) * 100)));
+            } else {
+                autarky = 100;
+            }
+            setElText('sum-autarky', autarky + ' %');
+
+            // 1. PV Card
             setElText('pv-total', fmtW(pvTot));
+            setElText('pv-today-badge', 'Heute: ' + pvToday + ' kWh');
+            setElText('pv-today', pvToday + ' kWh');
+
             var pv1V = (typeof d.pv1_voltage_v === 'number') ? d.pv1_voltage_v.toFixed(1) : '0.0';
             var pv1I = (typeof d.pv1_current_a === 'number') ? d.pv1_current_a.toFixed(1) : '0.0';
             var pv1W = (typeof d.pv1_power_w === 'number') ? d.pv1_power_w.toFixed(0) : '0';
@@ -707,19 +1218,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             var pv2W = (typeof d.pv2_power_w === 'number') ? d.pv2_power_w.toFixed(0) : '0';
             setElText('pv2', pv2W + ' W (' + pv2V + ' V, ' + pv2I + ' A)');
 
-            var pvToday = (typeof d.energy_pv_today_kwh === 'number') ? d.energy_pv_today_kwh.toFixed(1) : '0.0';
-            setElText('pv-today', pvToday + ' kWh');
-            setElText('pv-today-badge', 'Heute: ' + pvToday + ' kWh');
-
-            // Battery Card
-            var soc = (d.battery_soc_percent !== undefined) ? d.battery_soc_percent : 0;
+            // 2. Battery Card
             setElText('bat-soc', soc + ' %');
-            var batStatusText = 'Standby';
-            if (batPow > 20) {
-                batStatusText = 'Laden (' + fmtW(batPow) + ')';
-            } else if (batPow < -20) {
-                batStatusText = 'Entladen (' + fmtW(Math.abs(batPow)) + ')';
-            }
             setElText('bat-status-badge', batStatusText);
             setElText('bat-power', (batPow >= 0 ? '+' : '') + fmtW(batPow));
             var batV = (typeof d.battery_voltage_v === 'number') ? d.battery_voltage_v.toFixed(1) : '0.0';
@@ -730,8 +1230,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             var batDisToday = (typeof d.energy_bat_dischg_today_kwh === 'number') ? d.energy_bat_dischg_today_kwh.toFixed(1) : '0.0';
             setElText('bat-today', batChgToday + ' / ' + batDisToday + ' kWh');
 
-            // Grid Card
-            setElText('grid-total', (gridPow >= 0 ? '+' : '') + fmtW(gridPow));
+            var batGauge = document.getElementById('bat-gauge-fill');
+            if (batGauge) {
+                var safeSoc = Math.max(0, Math.min(100, soc));
+                batGauge.style.width = safeSoc + '%';
+                if (safeSoc > 35) {
+                    batGauge.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+                } else if (safeSoc > 15) {
+                    batGauge.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                } else {
+                    batGauge.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+                }
+            }
+
+            // 3. Grid Card
+            var gridCardTot = document.getElementById('grid-total');
+            if (gridCardTot) {
+                gridCardTot.textContent = (gridPow >= 0 ? '+' : '') + fmtW(gridPow);
+                gridCardTot.style.color = (gridPow < -20) ? '#10b981' : ((gridPow > 20) ? '#f97316' : '#38bdf8');
+            }
             setElText('grid-freq', (typeof d.grid_frequency_hz === 'number' ? d.grid_frequency_hz.toFixed(2) : '50.00') + ' Hz');
             var gL1V = (typeof d.grid_voltage_l1_v === 'number') ? d.grid_voltage_l1_v.toFixed(1) : '0.0';
             var gL1W = (typeof d.grid_power_l1_w === 'number') ? d.grid_power_l1_w : 0;
@@ -749,68 +1266,110 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             var sellToday = (typeof d.energy_grid_sell_today_kwh === 'number') ? d.energy_grid_sell_today_kwh.toFixed(1) : '0.0';
             setElText('grid-today', 'Kauf: ' + buyToday + ' / Verk: ' + sellToday + ' kWh');
 
-            // Load Card
+            // 4. Load Card
             setElText('load-total', fmtW(loadTot));
+            setElText('load-today-badge', 'Heute: ' + loadToday + ' kWh');
             var lL1 = (typeof d.load_power_l1_w === 'number') ? d.load_power_l1_w : 0;
             var lL2 = (typeof d.load_power_l2_w === 'number') ? d.load_power_l2_w : 0;
             var lL3 = (typeof d.load_power_l3_w === 'number') ? d.load_power_l3_w : 0;
             setElText('load-phases', lL1 + ' / ' + lL2 + ' / ' + lL3 + ' W');
-            var loadToday = (typeof d.energy_load_today_kwh === 'number') ? d.energy_load_today_kwh.toFixed(1) : '0.0';
             setElText('load-today', loadToday + ' kWh');
-            setElText('load-today-badge', 'Heute: ' + loadToday + ' kWh');
+
             var dcTemp = (typeof d.temp_dc_celsius === 'number') ? d.temp_dc_celsius.toFixed(1) : '0';
             var acTemp = (typeof d.temp_ac_celsius === 'number') ? d.temp_ac_celsius.toFixed(1) : '0';
             setElText('inv-temps', dcTemp + ' \u00B0C / ' + acTemp + ' \u00B0C');
 
+            // 5. Flow Diagram Active Line Classes
+            var lPv = document.getElementById('line-pv-inv');
+            if (lPv) {
+                lPv.className.baseVal = (pvTot > 20) ? 'flow-line flow-line-active' : 'flow-line';
+                lPv.style.stroke = (pvTot > 20) ? '#f59e0b' : 'rgba(255,255,255,0.12)';
+            }
+
+            var lBat = document.getElementById('line-inv-bat');
+            if (lBat) {
+                if (batPow > 20) {
+                    lBat.className.baseVal = 'flow-line flow-line-reverse'; // Charging
+                    lBat.style.stroke = '#10b981';
+                } else if (batPow < -20) {
+                    lBat.className.baseVal = 'flow-line flow-line-active'; // Discharging
+                    lBat.style.stroke = '#34d399';
+                } else {
+                    lBat.className.baseVal = 'flow-line';
+                    lBat.style.stroke = 'rgba(255,255,255,0.12)';
+                }
+            }
+
+            var lGrid = document.getElementById('line-inv-grid');
+            if (lGrid) {
+                if (gridPow < -20) {
+                    lGrid.className.baseVal = 'flow-line flow-line-active'; // Export
+                    lGrid.style.stroke = '#10b981';
+                } else if (gridPow > 20) {
+                    lGrid.className.baseVal = 'flow-line flow-line-reverse'; // Import
+                    lGrid.style.stroke = '#f97316';
+                } else {
+                    lGrid.className.baseVal = 'flow-line';
+                    lGrid.style.stroke = 'rgba(255,255,255,0.12)';
+                }
+            }
+
+            var lLoad = document.getElementById('line-inv-load');
+            if (lLoad) {
+                lLoad.className.baseVal = (loadTot > 20) ? 'flow-line flow-line-active' : 'flow-line';
+                lLoad.style.stroke = (loadTot > 20) ? '#ec4899' : 'rgba(255,255,255,0.12)';
+            }
+
             // Footer
             if (d.logger_serial) {
-                setElText('footer-details', 'Deye SUN-12K \u2022 Logger SN: ' + d.logger_serial + ' \u2022 ' + (d.timestamp || ''));
+                setElText('footer-details', 'Deye SUN-12K-SG04LP3 \u2022 Logger SN: ' + d.logger_serial + ' \u2022 ' + (d.timestamp || ''));
             }
         }
 
+        // --- Fetch Metrics with AbortController for Chrome 101 / TV Standby ---
+        var currentAbortController = null;
+        var pollTimer = null;
+
         function fetchMetrics() {
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/api/data?_t=' + (new Date().getTime()), true);
-                xhr.timeout = 4000;
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                var d = JSON.parse(xhr.responseText);
-                                updateUI(d);
-                            } catch (e) {
-                                var lu = document.getElementById('last-update');
-                                if (lu) lu.innerText = 'Datenfehler';
-                            }
-                        } else if (xhr.status !== 0) {
-                            var dot = document.getElementById('status-dot');
-                            if (dot) dot.className = 'dot err';
-                            var lu = document.getElementById('last-update');
-                            if (lu) lu.innerText = 'HTTP Fehler ' + xhr.status;
-                        }
-                    }
-                };
-                xhr.onerror = function() {
-                    var dot = document.getElementById('status-dot');
-                    if (dot) dot.className = 'dot err';
-                    var lu = document.getElementById('last-update');
-                    if (lu) lu.innerText = 'Verbindung unterbrochen';
-                };
-                xhr.ontimeout = function() {
-                    var dot = document.getElementById('status-dot');
-                    if (dot) dot.className = 'dot err';
-                    var lu = document.getElementById('last-update');
-                    if (lu) lu.innerText = 'Zeit\u00FCberschreitung';
-                };
-                xhr.send();
-            } catch(e) {
+            if (currentAbortController) {
+                currentAbortController.abort();
+            }
+            currentAbortController = new AbortController();
+            var timeoutId = setTimeout(function() {
+                if (currentAbortController) currentAbortController.abort();
+            }, 3500);
+
+            fetch('/api/data?_t=' + Date.now(), {
+                signal: currentAbortController.signal,
+                cache: 'no-store'
+            })
+            .then(function(resp) {
+                clearTimeout(timeoutId);
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                return resp.json();
+            })
+            .then(function(data) {
+                updateUI(data);
+            })
+            .catch(function(err) {
+                if (err.name === 'AbortError') return;
                 var dot = document.getElementById('status-dot');
                 if (dot) dot.className = 'dot err';
                 var lu = document.getElementById('last-update');
-                if (lu) lu.innerText = 'Fehler';
-            }
+                if (lu) lu.textContent = 'Verbindungsproblem';
+            });
         }
+
+        // --- TV Standby / Visibility change handling ---
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (pollTimer) clearInterval(pollTimer);
+            } else {
+                fetchMetrics();
+                if (pollTimer) clearInterval(pollTimer);
+                pollTimer = setInterval(fetchMetrics, 2500);
+            }
+        });
 
         // Initialize immediately with server-injected data if available
         var initialData = /*__INITIAL_DATA__*/ null;
@@ -818,9 +1377,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             updateUI(initialData);
         }
 
-        // Fetch immediately and poll every 2.5 seconds
+        // Start polling every 2.5s
         fetchMetrics();
-        setInterval(fetchMetrics, 2500);
+        pollTimer = setInterval(fetchMetrics, 2500);
     </script>
 </body>
 </html>
